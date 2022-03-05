@@ -1,6 +1,7 @@
+import re
 from datetime import date
-from functions.functions import realiza_pedido,busca_estoque,confere_estoque
-from fastapi import FastAPI
+from functions.functions import accomplish_purchase,search_stock,check_stock,select_date_purchase
+from fastapi import FastAPI,HTTPException
 from pydantic import BaseModel
 from database.database import Database_Client, Database_Disc
 
@@ -8,6 +9,8 @@ app = FastAPI()
 db_cli = Database_Client()
 db_disc = Database_Disc()
 
+regex_email = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+regex_telefone = r'^\(?(?:[14689][1-9]|2[12478]|3[1234578]|5[1345]|7[134579])\)? ?(?:[2-8]|9[1-9])[0-9]{3}\-?[0-9]{4}$'
 #Base model para os requests
 class client(BaseModel):
     documento:str
@@ -23,30 +26,41 @@ class discs(BaseModel):
     estilo:str
     quantidade:int
 
-class pedido(BaseModel):
+class purchase(BaseModel):
     nome_cliente:str
     nome_disco:str
     quantidade:int
     data_pedido:date
-#Rotas de pedido
 
+class date_purchase(BaseModel):
+    date_init:date
+    date_end:date
 
-#Fim rotas de pedido
 
 #Rotas de pedido
 @app.post("/pedido")
-async def insert_pedido(pedido:pedido) -> str:
-    pedido = pedido.dict()
-    realiza_pedido(pedido)
-    estoque = busca_estoque(pedido['nome_disco'])
-    confere_estoque(estoque,pedido['quantidade'],pedido['nome_disco'])
-    return "ok"
+async def insert_pedido(purchase:purchase) -> str:
+    purchase = purchase.dict()   
+    stock = search_stock(purchase['nome_disco'])
+    if stock == True:
+        return HTTPException(status_code=400, detail="discos esgotados")
+    else:
+        print("ta chegando aqui")
+        accomplish_purchase(purchase)
+        check = check_stock(stock,purchase['quantidade'],purchase['nome_disco'])
+        return check
 
+@app.get("/select/pedido")
+async def insert_pedido(date_purchase:date_purchase) -> str:
+    date_purchase = date_purchase.dict()
+    select_date_purchase(date_purchase)
+
+#Fim rotas de pedido
 
 #Rotas relacionadas aos discos
 
 @app.get("/discs/select")
-def select_disc(discs:discs):
+def select_disc(discs:discs)-> str:
     discs = discs.dict()
     select_clientes = db_disc.select_disc(discs)
     return select_clientes
@@ -55,22 +69,22 @@ def select_disc(discs:discs):
 @app.post("/discs/insert")
 async def insert_disc(discs:discs) -> str:
     discs = discs.dict()
-    insert_banco_cliente = db_disc.insert_disc(discs)
-    return insert_banco_cliente
+    insert_customer_bank = db_disc.insert_disc(discs)
+    return insert_customer_bank
 
 
 @app.put("/discs/update")
 async def update_disc(discs:discs)-> str:
     discs = discs.dict()
-    update_banco_disc = db_disc.update_disc(discs)
-    return update_banco_disc
+    update_database_disc = db_disc.update_disc(discs)
+    return update_database_disc
 
 
 @app.delete("/discs/delete")
 def delete_discs(discs:discs)-> str:
     discs = discs.dict()
-    delete_banco_disc = db_disc.delete_disc(discs)
-    return delete_banco_disc
+    delete_database_disc = db_disc.delete_disc(discs)
+    return delete_database_disc
 
 #Fim das rotas relacionadas aos discos
 
@@ -91,21 +105,25 @@ def select_client():
 @app.post("/cliente/insert")
 async def insert_client(client:client) -> str:
     client = client.dict()
-    insert_banco_cliente = db_cli.insert_client(client)
-    return insert_banco_cliente
-
+    if re.fullmatch(regex_email, client['email']) and re.fullmatch(regex_telefone, client['telefone']) :
+        insert_database_cliente = db_cli.insert_client(client)
+        if insert_database_cliente!=None:
+            return insert_database_cliente
+        return insert_database_cliente
+    else:
+        return "email ou telefone invalido"
 
 @app.put("/cliente/update")
 async def insert_client(client:client)-> str:
     client = client.dict()
-    update_banco_cliente = db_cli.update_cliente(client["documento"],client["nome"],client["nascimento"],client["email"],client["telefone"])
-    return update_banco_cliente
+    update_database_cliente = db_cli.update_cliente(client["documento"],client["nome"],client["nascimento"],client["email"],client["telefone"])
+    return update_database_cliente
 
 
 @app.delete("/cliente/delete")
 def delete_client(client:client)-> str:
     client = client.dict()
-    delete_banco_cliente = db_cli.delete_client(client)
-    return delete_banco_cliente
+    delete_database_cliente = db_cli.delete_client(client)
+    return delete_database_cliente
 
 #Fim das rotas relacionadas aos clientes

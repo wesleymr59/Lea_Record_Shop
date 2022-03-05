@@ -12,7 +12,7 @@ class Database_Client():
             return self.connection
 
         except (Exception, psycopg2.Error) as error:
-            print("Failed to connection", error)
+            return("Failed to connection", error)
 
     def insert_client(self,request_client:dict()):
         try:
@@ -33,7 +33,7 @@ class Database_Client():
             cursor.close()
             return(f"{count} Record inserted successfully into client table")
         except (Exception, psycopg2.Error) as error:
-            print("Failed to INSERT record into CLIENT table", error)
+            return("Failed to INSERT record into CLIENT table")
 
     def update_cliente(self, request_client:dict()):
         try:
@@ -54,7 +54,7 @@ class Database_Client():
             cursor.close()
             return(f"{count} Record updated successfully into CLIENT table")
         except (Exception, psycopg2.Error) as error:
-            print("Failed to UPDATE into CLIENT table", error)
+            return("Failed to UPDATE into CLIENT table", error)
 
     def select_client(self, request_client:dict()):
         try:
@@ -64,7 +64,7 @@ class Database_Client():
             clients = cursor.fetchall()
             return clients
         except (Exception, psycopg2.Error) as error:
-            print("Failed to SELECT into CLIENT table", error)
+            return("Failed to SELECT into CLIENT table", error)
 
     def delete_client(self, request_client:dict()):
         try:
@@ -84,7 +84,7 @@ class Database_Client():
             cursor.close()
             return(f"{count} Record updated successfully into CLIENT table")
         except (Exception, psycopg2.Error) as error:
-            print("Failed to DELETE into CLIENT table", error)
+            return("Failed to DELETE into CLIENT table", error)
 
 class Database_Disc():
 
@@ -99,7 +99,7 @@ class Database_Disc():
             return self.connection
 
         except (Exception, psycopg2.Error) as error:
-            print("Failed to connection", error)
+            return("Failed to connection", error)
 
     def insert_disc(self,request_disc:dict()):
         try:
@@ -120,7 +120,7 @@ class Database_Disc():
             cursor.close()
             return(f"{count} Record inserted successfully into DISC table")
         except (Exception, psycopg2.Error) as error:
-            print("Failed to INSERT into DISC table", error)
+            return("Failed to INSERT into DISC table", error)
 
     def update_disc(self, request_disc:dict()):
         try:
@@ -141,7 +141,7 @@ class Database_Disc():
             cursor.close()
             return(f"{count} Record updated successfully into DISC table")
         except (Exception, psycopg2.Error) as error:
-            print("Failed to UPDATE into DISC table", error)
+            return("Failed to UPDATE into DISC table", error)
 
     def select_disc(self,request_disc:dict()):
         try:
@@ -155,7 +155,7 @@ class Database_Disc():
             clients = cursor.fetchall()
             return clients
         except (Exception, psycopg2.Error) as error:
-            print("Failed to SELECT into DISC table", error)
+            return("Failed to SELECT into DISC table", error)
     
     def delete_disc(self, request_disc:dict()):
         try:
@@ -175,7 +175,7 @@ class Database_Disc():
             cursor.close()
             return(f"{count} Record updated successfully into CLIENT table")
         except (Exception, psycopg2.Error) as error:
-            print("Failed to DELETE into DISC table", error)
+            return("Failed to DELETE into DISC table", error)
 
 class Pedido():
     def setConnection(self):
@@ -189,9 +189,9 @@ class Pedido():
             return self.connection
 
         except (Exception, psycopg2.Error) as error:
-            print("Failed to connection", error)
+            return("Failed to connection", error)
 
-    def insert_pedido(self, request_disc:dict()):
+    def insert_purchase(self, request_disc:dict()):
         try: 
             postgres_insert_query = f""" 
                                         INSERT INTO pedido (cliente,disco,quantidade,data_pedido)
@@ -209,7 +209,7 @@ class Pedido():
             cursor.close()
             return(f"{count} Record inserted successfully into PEDIDO table")
         except (Exception, psycopg2.Error) as error:
-            print("Failed to INSERT into DISC table", error)
+            return("Failed to INSERT into PEDIDO table", error)
 
     def select_pedido(self,request_pedido:str):
         try:
@@ -223,7 +223,7 @@ class Pedido():
             clients = cursor.fetchone()
             return clients
         except (Exception, psycopg2.Error) as error:
-            print("Failed to SELECT into DISC table", error)
+            return("Failed to SELECT into PEDIDO table", error)
     
     def update_pedido(self, quantidade:int,nome:str()):
         try:
@@ -241,4 +241,17 @@ class Pedido():
             cursor.close()
             return(f"pedido efetuado com sucesso")
         except (Exception, psycopg2.Error) as error:
-            print("Failed to DELETE into DISC table", error)
+            return("Failed to UPDATE into PEDIDO table", error)
+    
+    def select_client(self, request_client:dict()):
+        try:
+            postgres_select_query = f"""SELECT * FROM pedido
+                                        WHERE
+                                            data_pedido  
+                                        BETWEEN '{request_client["date_init"]}' AND '{request_client["date_end"]}' """
+            cursor = self.setConnection().cursor()
+            cursor.execute(postgres_select_query)
+            clients = cursor.fetchall()
+            return clients
+        except (Exception, psycopg2.Error) as error:
+            return("Failed to SELECT into Pedido table", error)
